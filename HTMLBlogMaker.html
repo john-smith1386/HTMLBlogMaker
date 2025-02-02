@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <!-- Responsive meta tag -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Text Converter & HTML Combiner</title>
+  <style>
+    /* Global box-sizing reset */
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+    /* Shared Styles */
+    body {
+      background-color: #FAF3E0;
+      margin: 0;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+      line-height: 1.5;
+    }
+    /* Containers */
+    #converterContainer,
+    #combinerContainer {
+      background-color: #FFFFFF;
+      max-width: 800px;
+      margin: 0 auto 40px auto;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    /* Headings */
+    h1, h2 {
+      text-align: center;
+      margin: 10px 0;
+    }
+    p {
+      text-align: center;
+    }
+    /* Page Header (Converter) */
+    .page-header {
+      /* Default page header color; will be updated by the chosen color scheme */
+      background-color: #8B5E3C;
+      color: #fff;
+      padding: 10px;
+      border-radius: 4px;
+      margin-bottom: 20px;
+    }
+    .page-header .header-inputs {
+      margin-bottom: 10px;
+    }
+    .page-header .header-inputs label {
+      display: block;
+      margin-bottom: 5px;
+    }
+    .page-header .header-inputs input,
+    .page-header .header-inputs textarea {
+      width: 100%;
+      padding: 8px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    /* Converter UI Content */
+    #uiContent {
+      margin-bottom: 20px;
+    }
+    .options-box {
+      margin-bottom: 20px;
+    }
+    .options-box label {
+      display: inline-block;
+      margin-right: 5px;
+      font-size: 14px;
+    }
+    .options-box select,
+    .options-box input {
+      padding: 5px;
+      font-size: 14px;
+    }
+    .text-box textarea {
+      width: 100%;
+      height: 150px;
+      padding: 8px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      resize: vertical;
+    }
+    .output-box {
+      margin-top: 20px;
+      border: 1px solid #ccc;
+      padding: 10px;
+      border-radius: 4px;
+      min-height: 50px;
+      overflow-x: auto;
+    }
+    /* (Produced HTML styles will be injected inline by JavaScript based on color scheme and header level) */
+    /* Buttons */
+    .buttons-box button,
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      border: none;
+      border-radius: 4px;
+      background-color: #5cb85c;
+      color: #fff;
+      margin-top: 10px;
+      margin-right: 10px;
+    }
+    .copy-btn {
+      font-size: 14px;
+      margin-top: 5px;
+    }
+    textarea#finalHtmlOutput {
+      width: 100%;
+      height: 300px;
+      padding: 8px;
+      font-size: 14px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      resize: vertical;
+    }
+    /* Combiner Section Styles */
+    #combinerContainer h1 {
+      text-align: center;
+    }
+    #combinerContainer p {
+      text-align: center;
+    }
+    .combiner-part {
+      margin-bottom: 20px;
+      position: relative;
+    }
+    .combiner-part textarea {
+      width: 100%;
+      height: 150px;
+      padding: 8px;
+      font-size: 14px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      resize: vertical;
+    }
+    .remove-part-btn {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      background-color: #d9534f;
+      border: none;
+      color: #fff;
+      padding: 5px 10px;
+      font-size: 12px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .combiner-part.first-part .remove-part-btn {
+      display: none;
+    }
+    #combinerOutputContainer {
+      margin-top: 20px;
+    }
+    #combinerOutputContainer textarea {
+      height: 300px;
+    }
+    /* Responsive Styles */
+    @media screen and (max-width: 600px) {
+      body {
+        padding: 10px;
+      }
+      #converterContainer,
+      #combinerContainer {
+        padding: 10px;
+        margin: 10px;
+      }
+      .page-header, .options-box, .text-box textarea, .combiner-part textarea {
+        font-size: 14px;
+      }
+      button {
+        font-size: 14px;
+        padding: 8px 16px;
+      }
+      .copy-btn {
+        font-size: 12px;
+      }
+      h1, h2 {
+        font-size: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Converter Tool Section -->
+  <div id="converterContainer">
+    <h1>Text to HTML Converter</h1>
+    <!-- Page Header -->
+    <div class="page-header" id="pageHeader">
+      <div class="business-info" id="businessInfo" style="margin-bottom:10px;"></div>
+      <div class="header-inputs">
+        <label id="pageTitleLabel">Page Title:</label>
+        <input type="text" id="title" placeholder="Enter your page title here">
+      </div>
+      <div class="header-inputs">
+        <label id="pageDescriptionLabel">Page Description:</label>
+        <textarea id="description" placeholder="Enter your page description here"></textarea>
+      </div>
+    </div>
+    <!-- Converter UI Content -->
+    <div id="uiContent">
+      <div class="options-box">
+        <label id="headerAlignmentLabel" for="headerAlignment">Header Alignment:</label>
+        <select id="headerAlignment">
+          <option value="left">Left</option>
+          <option value="center">Center</option>
+          <option value="right">Right</option>
+        </select>
+      </div>
+      <div class="options-box">
+        <label id="bodyAlignmentLabel" for="bodyAlignment">Body Text Alignment:</label>
+        <select id="bodyAlignment">
+          <option value="left">Left</option>
+          <option value="center">Center</option>
+          <option value="right">Right</option>
+        </select>
+      </div>
+      <!-- Color Scheme Option -->
+      <div class="options-box">
+        <label id="colorSchemeLabel" for="colorSchemeSelect">Color Scheme:</label>
+        <select id="colorSchemeSelect">
+          <option value="default">Default</option>
+          <option value="blue">Blue</option>
+          <option value="green">Green</option>
+        </select>
+      </div>
+      <div class="options-box">
+        <label id="logoUrlLabel" for="logoUrl">Logo URL:</label>
+        <input type="text" id="logoUrl" placeholder="Enter logo URL (optional)">
+      </div>
+      <div class="options-box">
+        <label id="businessNameLabel" for="businessName">Business Name:</label>
+        <input type="text" id="businessName" placeholder="Enter business name (optional)">
+      </div>
+      <div class="text-box">
+        <label id="inputTextLabel"><strong>Paste Your Text Here:</strong></label>
+        <textarea id="inputText" placeholder="Type or paste text here.
+Use '# ' for Header 1 (collapsible).
+Use '## ' for Header 2.
+Use '### ' for Header 3.
+Use '#### ' for Header 4.
+Use '##### ' for Header 5.
+Use '###### ' for Header 6.
+Lines without markers will be treated as body text."></textarea>
+      </div>
+      <div class="buttons-box">
+        <button id="convertBtn">Convert Text</button>
+        <button id="generateFinalHtmlBtn">Generate Final HTML Code</button>
+      </div>
+      <div id="outputContainer" class="output-box"></div>
+      <button id="copyTextBtn" class="copy-btn">Copy Produced Text</button>
+      <div id="finalHtmlContainer" style="display:none; margin-top:20px;">
+        <label id="finalHtmlLabel" for="finalHtmlOutput"><strong>Final HTML Code:</strong></label>
+        <textarea id="finalHtmlOutput" readonly></textarea>
+        <button id="copyHtmlBtn" class="copy-btn">Copy HTML Code</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Combiner Tool Section -->
+  <div id="combinerContainer" style="margin-top:40px;">
+    <h1 id="combinerTitle">HTML Combiner Tool</h1>
+    <p id="combinerInstructions">
+      Paste each produced HTML part (each a complete HTML document) into its own box.
+      Click "Add Part" to add more boxes. When finished, click "Combine HTML" to produce one final HTML document.
+    </p>
+    <div id="partsContainer">
+      <div class="combiner-part first-part">
+        <textarea placeholder="Paste produced HTML part here"></textarea>
+      </div>
+    </div>
+    <button id="addPartBtn">Add Part</button>
+    <button id="combineBtn">Combine HTML</button>
+    <button id="copyCombinedBtn" style="display:none;">Copy Combined HTML</button>
+    <div id="combinerOutputContainer" style="display:none;">
+      <h2 id="combinerCombinedTitle">Combined HTML Code:</h2>
+      <textarea id="combinedOutput" readonly></textarea>
+    </div>
+  </div>
+
+  <script>
+    // --- English-only Texts ---
+    var languageTexts = {
+      en: {
+        pageTitle: "Page Title:",
+        pageDescription: "Page Description:",
+        logoUrl: "Logo URL:",
+        businessName: "Business Name:",
+        headerAlignment: "Header Alignment:",
+        bodyAlignment: "Body Text Alignment:",
+        colorScheme: "Color Scheme:",
+        inputTextLabel: "Paste Your Text Here:",
+        convertText: "Convert Text",
+        generateFinalHtml: "Generate Final HTML Code",
+        finalHtml: "Final HTML Code:",
+        titlePlaceholder: "Enter your page title here",
+        descriptionPlaceholder: "Enter your page description here",
+        logoUrlPlaceholder: "Enter logo URL (optional)",
+        businessNamePlaceholder: "Enter business name (optional)",
+        inputPlaceholder: "Type or paste text here.\nUse '# ' for Header 1 (collapsible).\nUse '## ' for Header 2.\nUse '### ' for Header 3.\nUse '#### ' for Header 4.\nUse '##### ' for Header 5.\nUse '###### ' for Header 6.\nLines without markers will be treated as body text.",
+        combinerTitle: "HTML Combiner Tool",
+        combinerInstructions: "Paste each produced HTML part (each a complete HTML document) into its own box. Click \"Add Part\" to add more boxes. When finished, click \"Combine HTML\" to produce one final HTML document.",
+        addPart: "Add Part",
+        combineHtml: "Combine HTML",
+        combinedHtmlTitle: "Combined HTML Code:",
+        copyCombinedHtml: "Copy Combined HTML",
+        remove: "Remove"
+      }
+    };
+    var currentLanguage = "en";
+    
+    // --- Set initial UI texts (English only) ---
+    function initializeUI() {
+      document.getElementById("pageTitleLabel").textContent = languageTexts.en.pageTitle;
+      document.getElementById("pageDescriptionLabel").textContent = languageTexts.en.pageDescription;
+      document.getElementById("logoUrlLabel").textContent = languageTexts.en.logoUrl;
+      document.getElementById("businessNameLabel").textContent = languageTexts.en.businessName;
+      document.getElementById("headerAlignmentLabel").textContent = languageTexts.en.headerAlignment;
+      document.getElementById("bodyAlignmentLabel").textContent = languageTexts.en.bodyAlignment;
+      document.getElementById("colorSchemeLabel").textContent = languageTexts.en.colorScheme;
+      document.getElementById("inputTextLabel").innerHTML = "<strong>" + languageTexts.en.inputTextLabel + "</strong>";
+      document.getElementById("convertBtn").textContent = languageTexts.en.convertText;
+      document.getElementById("generateFinalHtmlBtn").textContent = languageTexts.en.generateFinalHtml;
+      document.getElementById("finalHtmlLabel").textContent = languageTexts.en.finalHtml;
+      document.getElementById("title").placeholder = languageTexts.en.titlePlaceholder;
+      document.getElementById("description").placeholder = languageTexts.en.descriptionPlaceholder;
+      document.getElementById("logoUrl").placeholder = languageTexts.en.logoUrlPlaceholder;
+      document.getElementById("businessName").placeholder = languageTexts.en.businessNamePlaceholder;
+      document.getElementById("inputText").placeholder = languageTexts.en.inputPlaceholder;
+      document.getElementById("combinerTitle").textContent = languageTexts.en.combinerTitle;
+      document.getElementById("combinerInstructions").textContent = languageTexts.en.combinerInstructions;
+      document.getElementById("addPartBtn").textContent = languageTexts.en.addPart;
+      document.getElementById("combineBtn").textContent = languageTexts.en.combineHtml;
+      document.getElementById("copyCombinedBtn").textContent = languageTexts.en.copyCombinedHtml;
+      document.getElementById("combinerCombinedTitle").textContent = languageTexts.en.combinedHtmlTitle;
+    }
+    initializeUI();
+    
+    // --- Color Scheme Functions ---
+    function getColorScheme() {
+      var scheme = document.getElementById("colorSchemeSelect").value;
+      var colorObj;
+      switch(scheme) {
+        case "blue":
+          colorObj = {
+            pageHeader: "#0056b3",
+            producedHeader: "#66afe9",      // Header 1 background
+            producedHeader2: "#66afe9",     // Header 2 text color
+            producedHeader3: "#5a9bd5",
+            producedHeader4: "#4e88c1",
+            producedHeader5: "#4274ad",
+            producedHeader6: "#36609a",
+            collapsible: "#cce5ff"
+          };
+          break;
+        case "green":
+          colorObj = {
+            pageHeader: "#28a745",
+            producedHeader: "#8fce8f",      // Header 1 background
+            producedHeader2: "#8fce8f",     // Header 2 text color
+            producedHeader3: "#7fc47f",
+            producedHeader4: "#6fb97f",
+            producedHeader5: "#5fad6f",
+            producedHeader6: "#4ea05f",
+            collapsible: "#dff0d8"
+          };
+          break;
+        default:
+          colorObj = {
+            pageHeader: "#8B5E3C",
+            producedHeader: "#DCA54A",      // Header 1 background
+            producedHeader2: "#DCA54A",     // Header 2 text color
+            producedHeader3: "#C29A47",
+            producedHeader4: "#B68A43",
+            producedHeader5: "#AA7A40",
+            producedHeader6: "#9E6A3C",
+            collapsible: "#FFFEF6"
+          };
+      }
+      return colorObj;
+    }
+    
+    // --- Update Colors Automatically When Scheme Changes ---
+    function updateColors() {
+      if(document.getElementById("inputText").value.trim() !== "") {
+        convertText();
+      }
+      if(document.getElementById("finalHtmlContainer").style.display !== "none") {
+        document.getElementById("generateFinalHtmlBtn").click();
+      }
+    }
+    document.getElementById("colorSchemeSelect").addEventListener("change", updateColors);
+    
+    // --- Converter Functions ---
+    function getAlignmentStyle(type) {
+      var alignment = "left";
+      if (type === "header") {
+        alignment = document.getElementById("headerAlignment").value;
+      } else if (type === "body") {
+        alignment = document.getElementById("bodyAlignment").value;
+      }
+      return "text-align: " + alignment + ";";
+    }
+    function toggleSection(headerElement) {
+      var content = headerElement.nextElementSibling;
+      var arrowSpan = headerElement.querySelector(".arrow");
+      if (content.style.display === "block") {
+        content.style.display = "none";
+        if (arrowSpan) { arrowSpan.innerHTML = "&#9654;"; }
+      } else {
+        content.style.display = "block";
+        if (arrowSpan) { arrowSpan.innerHTML = "&#9660;"; }
+      }
+    }
+    function convertText() {
+      var colors = getColorScheme();
+      var inputText = document.getElementById("inputText").value;
+      var lines = inputText.split("\n");
+      var outputHtml = "";
+      for (var i = 0; i < lines.length; i++) {
+        var line = lines[i].trim();
+        line = line.replace(/^\*+\s*/, "");
+        var headerMatch = line.match(/^(#{1,6})\s+(.*)/);
+        if (headerMatch) {
+          var headerLevel = headerMatch[1].length;
+          var headerContent = headerMatch[2];
+          if (headerLevel === 1) {
+            outputHtml += '<div class="header1" style="background-color: ' + colors.producedHeader + '; color: #fff; font-size: 24px; font-weight: bold; ' + getAlignmentStyle("header") + '" onclick="toggleSection(this)"><span class="arrow">&#9654;</span> ' + headerContent + '</div>';
+            var sectionContent = "";
+            i++;
+            while (i < lines.length && !lines[i].trim().match(/^#\s+/)) {
+              var innerLine = lines[i].trim().replace(/^\*+\s*/, "");
+              var innerHeaderMatch = innerLine.match(/^(#{2,6})\s+(.*)/);
+              if (innerHeaderMatch) {
+                var innerHeaderLevel = innerHeaderMatch[1].length;
+                var innerHeaderContent = innerHeaderMatch[2];
+                var fontSize;
+                switch(innerHeaderLevel) {
+                  case 2: fontSize = "22px"; break;
+                  case 3: fontSize = "20px"; break;
+                  case 4: fontSize = "18px"; break;
+                  case 5: fontSize = "16px"; break;
+                  case 6: fontSize = "12px"; break;
+                  default: fontSize = "12px";
+                }
+                var style = 'background-color: transparent; color: ' + colors["producedHeader" + innerHeaderLevel] + '; font-size: ' + fontSize + '; font-weight: bold; ' + getAlignmentStyle("header");
+                sectionContent += '<div class="header' + innerHeaderLevel + '" style="' + style + '">' + innerHeaderContent + '</div>';
+              } else {
+                sectionContent += '<div class="body-text" style="font-size: 12px; font-weight: normal; ' + getAlignmentStyle("body") + '">' + innerLine + '</div>';
+              }
+              i++;
+            }
+            i--;
+            outputHtml += '<div class="collapsible-content" style="background-color: ' + colors.collapsible + ';">' + sectionContent + '</div>';
+          } else {
+            var fontSize;
+            switch(headerLevel) {
+              case 2: fontSize = "22px"; break;
+              case 3: fontSize = "20px"; break;
+              case 4: fontSize = "18px"; break;
+              case 5: fontSize = "16px"; break;
+              case 6: fontSize = "12px"; break;
+              default: fontSize = "12px";
+            }
+            var style = 'background-color: transparent; color: ' + colors["producedHeader" + headerLevel] + '; font-size: ' + fontSize + '; font-weight: bold; ' + getAlignmentStyle("header");
+            outputHtml += '<div class="header' + headerLevel + '" style="' + style + '">' + headerContent + '</div>';
+          }
+        } else {
+          outputHtml += '<div class="body-text" style="font-size: 12px; font-weight: normal; ' + getAlignmentStyle("body") + '">' + line + '</div>';
+        }
+      }
+      document.getElementById("outputContainer").innerHTML = outputHtml;
+      document.getElementById("outputContainer").setAttribute("dir", "ltr");
+      document.getElementById("finalHtmlContainer").style.display = "none";
+    }
+    document.getElementById("convertBtn").addEventListener("click", convertText);
+    document.getElementById("generateFinalHtmlBtn").addEventListener("click", function() {
+      if (!document.getElementById("outputContainer").innerHTML.trim()) { convertText(); }
+      var colors = getColorScheme();
+      var content = document.getElementById("outputContainer").innerHTML;
+      var title = document.getElementById("title").value || languageTexts.en.pageTitle;
+      var description = document.getElementById("description").value || languageTexts.en.pageDescription;
+      var logoUrl = document.getElementById("logoUrl").value.trim();
+      var businessName = document.getElementById("businessName").value.trim();
+      var finalHtml = '<!DOCTYPE html>\n<html lang="en" dir="ltr">\n<head>\n  <meta charset="UTF-8">\n  <title>' + title + '</title>\n  <style>\n';
+      finalHtml += 'body { background-color: #FAF3E0; font-family: Arial, sans-serif; margin: 0; padding: 20px; }\n';
+      finalHtml += '#container { background-color: #FFFFFF; max-width: 800px; margin: 0 auto; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }\n';
+      finalHtml += '.page-header { background-color: ' + colors.pageHeader + '; color: #fff; padding: 10px; border-radius: 4px; margin-bottom: 20px; }\n';
+      finalHtml += '.header-inputs label { display: block; margin-bottom: 5px; }\n';
+      finalHtml += '.header-inputs input, .header-inputs textarea { width: 100%; padding: 8px; font-size: 16px; border: 1px solid #ccc; border-radius: 4px; }\n';
+      finalHtml += '.header1 { background-color: ' + colors.producedHeader + '; color: #fff; font-size: 24px; font-weight: bold; padding: 10px; margin-top: 10px; border-radius: 4px; cursor: pointer; }\n';
+      finalHtml += '.header2 { background-color: transparent; color: ' + colors.producedHeader2 + '; font-size: 22px; font-weight: bold; padding: 10px; margin-top: 10px; border-radius: 4px; cursor: pointer; margin-left: 10px; }\n';
+      finalHtml += '.header3 { background-color: transparent; color: ' + colors.producedHeader3 + '; font-size: 20px; font-weight: bold; padding: 10px; margin-top: 10px; border-radius: 4px; cursor: pointer; margin-left: 20px; }\n';
+      finalHtml += '.header4 { background-color: transparent; color: ' + colors.producedHeader4 + '; font-size: 18px; font-weight: bold; padding: 10px; margin-top: 10px; border-radius: 4px; cursor: pointer; margin-left: 30px; }\n';
+      finalHtml += '.header5 { background-color: transparent; color: ' + colors.producedHeader5 + '; font-size: 16px; font-weight: bold; padding: 10px; margin-top: 10px; border-radius: 4px; cursor: pointer; margin-left: 40px; }\n';
+      finalHtml += '.header6 { background-color: transparent; color: ' + colors.producedHeader6 + '; font-size: 12px; font-weight: bold; padding: 10px; margin-top: 10px; border-radius: 4px; cursor: pointer; margin-left: 50px; }\n';
+      finalHtml += '.body-text { font-size: 12px; font-weight: normal; padding: 10px; margin-left: 20px; }\n';
+      finalHtml += '.collapsible-content { display: none; background-color: ' + colors.collapsible + '; padding: 10px; border-radius: 4px; margin-bottom: 10px; }\n';
+      finalHtml += '  </style>\n</head>\n<body>\n  <div id="container">\n';
+      finalHtml += '    <div class="page-header">\n';
+      if (logoUrl || businessName) {
+        finalHtml += '      <div class="business-info" style="text-align: left; margin-bottom:10px;">\n';
+        if (logoUrl) { finalHtml += '        <img src="' + logoUrl + '" alt="Logo" style="max-height:50px; vertical-align:middle;">\n'; }
+        if (businessName) { finalHtml += '        <span class="business-name" style="font-size:18px; margin-left:10px; vertical-align:middle;">' + businessName + '</span>\n'; }
+        finalHtml += '      </div>\n';
+      }
+      finalHtml += '      <div class="header-inputs">\n';
+      finalHtml += '        <h1>' + title + '</h1>\n';
+      finalHtml += '      </div>\n';
+      finalHtml += '      <div class="header-inputs">\n';
+      finalHtml += '        <p>' + description + '</p>\n';
+      finalHtml += '      </div>\n';
+      finalHtml += '    </div>\n';
+      finalHtml += '    <div id="uiContent">' + content + '</div>\n';
+      finalHtml += '  </div>\n';
+      finalHtml += '<script>\n';
+      finalHtml += 'function toggleSection(headerElement) {\n';
+      finalHtml += '  var content = headerElement.nextElementSibling;\n';
+      finalHtml += '  var arrowSpan = headerElement.querySelector(\'.arrow\');\n';
+      finalHtml += '  if (content.style.display === "block") {\n';
+      finalHtml += '    content.style.display = "none";\n';
+      finalHtml += '    if (arrowSpan) { arrowSpan.innerHTML = "&#9654;"; }\n';
+      finalHtml += '  } else {\n';
+      finalHtml += '    content.style.display = "block";\n';
+      finalHtml += '    if (arrowSpan) { arrowSpan.innerHTML = "&#9660;"; }\n';
+      finalHtml += '  }\n';
+      finalHtml += '}\n';
+      finalHtml += '<\/script>\n';
+      finalHtml += '</body>\n</html>';
+      document.getElementById("finalHtmlOutput").value = finalHtml;
+      document.getElementById("finalHtmlContainer").style.display = "block";
+    });
+    document.getElementById("copyTextBtn").addEventListener("click", function() {
+      var text = document.getElementById("outputContainer").innerText;
+      navigator.clipboard.writeText(text).then(function() {
+        alert("Produced text copied to clipboard!");
+      }, function(err) {
+        alert("Error copying text: " + err);
+      });
+    });
+    document.getElementById("copyHtmlBtn").addEventListener("click", function() {
+      var htmlCode = document.getElementById("finalHtmlOutput").value;
+      navigator.clipboard.writeText(htmlCode).then(function() {
+        alert("HTML code copied to clipboard!");
+      }, function(err) {
+        alert("Error copying HTML: " + err);
+      });
+    });
+    
+    // --- Combiner Tool Scripts ---
+    document.getElementById("addPartBtn").addEventListener("click", function() {
+      var partsContainer = document.getElementById("partsContainer");
+      var newPartDiv = document.createElement("div");
+      newPartDiv.className = "combiner-part";
+      var newTextarea = document.createElement("textarea");
+      newTextarea.placeholder = "Paste produced HTML part here";
+      newPartDiv.appendChild(newTextarea);
+      var removeBtn = document.createElement("button");
+      removeBtn.className = "remove-part-btn";
+      removeBtn.textContent = languageTexts.en.remove;
+      removeBtn.onclick = function() { newPartDiv.remove(); };
+      newPartDiv.appendChild(removeBtn);
+      partsContainer.appendChild(newPartDiv);
+    });
+    
+    document.getElementById("combineBtn").addEventListener("click", function() {
+      var partsContainer = document.getElementById("partsContainer");
+      var textareas = partsContainer.getElementsByTagName("textarea");
+      var combinedBodyContent = "";
+      var parser = new DOMParser();
+      for (var i = 0; i < textareas.length; i++) {
+        var htmlText = textareas[i].value.trim();
+        if (htmlText === "") continue;
+        var doc = parser.parseFromString(htmlText, "text/html");
+        var bodyContent = "";
+        if (doc.body) {
+          bodyContent = doc.body.innerHTML;
+        } else {
+          bodyContent = htmlText;
+        }
+        combinedBodyContent += "\n" + bodyContent + "\n";
+      }
+      var finalHtml = "<!DOCTYPE html>\n";
+      finalHtml += "<html lang='en'>\n";
+      finalHtml += "<head>\n";
+      finalHtml += "  <meta charset='UTF-8'>\n";
+      finalHtml += "  <title>Combined HTML Document</title>\n";
+      finalHtml += "  <style>\n";
+      finalHtml += "    body { background-color: #FAF3E0; font-family: Arial, sans-serif; margin: 0; padding: 20px; }\n";
+      finalHtml += "    #container { background-color: #FFFFFF; max-width: 800px; margin: 0 auto; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }\n";
+      finalHtml += "  </style>\n";
+      finalHtml += "</head>\n";
+      finalHtml += "<body>\n";
+      finalHtml += "  <div id='container'>\n";
+      finalHtml += combinedBodyContent;
+      finalHtml += "  </div>\n";
+      finalHtml += "</body>\n";
+      finalHtml += "</html>";
+      document.getElementById("combinedOutput").value = finalHtml;
+      document.getElementById("combinerOutputContainer").style.display = "block";
+      document.getElementById("copyCombinedBtn").style.display = "inline-block";
+    });
+    
+    document.getElementById("copyCombinedBtn").addEventListener("click", function() {
+      var combinedHtml = document.getElementById("combinedOutput").value;
+      navigator.clipboard.writeText(combinedHtml).then(function() {
+        alert("Combined HTML copied to clipboard!");
+      }, function(err) {
+        alert("Error copying combined HTML: " + err);
+      });
+    });
+  </script>
+</body>
+</html>
